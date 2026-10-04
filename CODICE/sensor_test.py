@@ -108,7 +108,15 @@ def run_conversation_ensemble(
     sensors_state = {}
     for name, model in zip(sensor_names, sensor_models):
         re = riskC.RiskEngine(initial=inherited_risk, cooling=cooling, heat_scale=heat_scale)
-        dt = riskC.DynamicThreshold()
+        dt = riskC.DynamicThreshold(
+            base=riskC.BASE_THRESHOLD,
+            min_t=riskC.MIN_THRESHOLD,
+            max_t=riskC.MAX_THRESHOLD,
+            drop_scale=riskC.THRESHOLD_DROP_SCALE,
+            early_boost=riskC.EARLY_TURNS_BOOST,
+            early_decay=riskC.EARLY_DECAY,
+            recovery=riskC.THRESHOLD_RECOVERY,
+        )
         if inherited_threshold_state:
             # Copiamo lo stato per evitare dipendenze condivise
             dt.load_state(copy.deepcopy(inherited_threshold_state))
@@ -404,6 +412,8 @@ Esempi:
     parser.add_argument("--drop-scale",     type=float, default=riskC.THRESHOLD_DROP_SCALE)
     parser.add_argument("--early-boost",    type=float, default=riskC.EARLY_TURNS_BOOST)
     parser.add_argument("--recovery",       type=float, default=riskC.THRESHOLD_RECOVERY)
+    parser.add_argument("--max-threshold",  type=float, default=riskC.MAX_THRESHOLD)
+    parser.add_argument("--early-decay",    type=float, default=riskC.EARLY_DECAY)
     parser.add_argument("--ctx-threshold",  type=float, default=mr.DEFAULT_CTX_THRESHOLD)
     parser.add_argument("--ctx-reserve",    type=float, default=mr.DEFAULT_CTX_RESERVE)
     parser.add_argument("--quiet", "-q", action="store_true")
@@ -414,7 +424,8 @@ Esempi:
     riskC.THRESHOLD_DROP_SCALE = args.drop_scale
     riskC.EARLY_TURNS_BOOST    = args.early_boost
     riskC.THRESHOLD_RECOVERY   = args.recovery
-
+    riskC.MAX_THRESHOLD        = args.max_threshold
+    riskC.EARLY_DECAY          = args.early_decay
     verbose = not args.quiet
 
     try:
