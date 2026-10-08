@@ -42,7 +42,7 @@ def is_defended(rec):
 
 
 def coverage_off():
-    """framework spento: coverage = DEFENDED / N. Ritorna per-target e aggregato."""
+    """Framework disabled: coverage = DEFENDED / N. Returns per-target and aggregate values."""
     per_tgt = {}; ndef = 0; ntot = 0
     for tgt, fn in MAL.items():
         recs = load(os.path.join(BASE_DIR, CONTROL_DIR, fn))
@@ -54,16 +54,16 @@ def coverage_off():
 
 def main():
     off_by_tgt, off_agg = coverage_off()
-    print(f"COVERAGE FRAMEWORK SPENTO (cartella '{CONTROL_DIR}'):")
-    print("  per target: " + " ".join(f"{t}={off_by_tgt[t]:.1%}" for t in MAL) +
-          f"   aggregato = {off_agg:.1%}")
-    print("  (baseline unico: il framework spento non ha configurazioni)\n")
+    print(f"COVERAGE FRAMEWORK DISABLED (folder '{CONTROL_DIR}'):")
+    print("  by target: " + " ".join(f"{t}={off_by_tgt[t]:.1%}" for t in MAL) +
+          f"   aggregate = {off_agg:.1%}")
+    print("  (Single baseline: The framework is turned off and has no configurations.)\n")
 
-    print(f'{"Config":7s} {"sensore":9s} {"OFF":>7s} {"ON":>7s} {"guadagno":>9s}')
+    print(f'{"Config":7s} {"sensor":9s} {"OFF":>7s} {"ON":>7s} {"gain":>9s}')
     for cfg, folder in CONFIGS.items():
         path = os.path.join(BASE_DIR, folder)
         if not os.path.isdir(path):
-            print(f"{cfg}: cartella '{folder}' assente, salto"); continue
+            print(f"{cfg}: folder '{folder}' missing, jump"); continue
         for s in SENS:
             covered = 0; ntot = 0
             for tgt, fn in MAL.items():

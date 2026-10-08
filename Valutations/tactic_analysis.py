@@ -23,7 +23,7 @@ def sensor_blocked(rec, s):
 
 
 def load_tactics():
-    """row_index -> tactic, mappatura POSIZIONALE sull'ordine del CSV."""
+    """row_index -> tactic, POSITIONAL mapping based on the CSV order."""
     with open(MHJ_CSV) as f:
         rows = list(csv.DictReader(f))
     return {i: r["tactic"] for i, r in enumerate(rows)}
@@ -60,7 +60,7 @@ def gather(tactics):
 
 
 def avg_over_configs(rate):
-    """media sulle config -> avg[sensor][tactic]."""
+    """average for configurations -> avg[sensor][tactic]."""
     cfgs = list(rate.keys())
     tactics = sorted({t for c in cfgs for s in SENS for t in rate[c][s]})
     avg = {s: {} for s in SENS}
@@ -75,23 +75,23 @@ def main():
     tactics = load_tactics()
     rate, counts = gather(tactics)
     if not rate:
-        print("nessuna config trovata"); return
+        print("No configuration found"); return
     avg, tac_list = avg_over_configs(rate)
     n_cfg = len(rate)
     tac_list = sorted(tac_list, key=lambda t: -counts[t])
 
-    print("Conteggio conversazioni per tattica (per dataset):")
+    print("Conversation Count by Tactic (per dataset):")
     for t in tac_list:
         n = counts[t] // (n_cfg * 3)  
         flag = "  <-- sample piccolo" if n < MIN_N else ""
         print(f"  {t:28s} {n}{flag}")
 
-    print("\nBLOCK-RATE per (tattica, sensore), media su config e target:")
-    print(f'{"tattica":28s} {"Granite":>9s} {"Llama":>9s} {"Mistral":>9s}')
+    print("\nBLOCK-RATE for (tactic, sensor), average across configurations and targets:")
+    print(f'{"tactics":28s} {"Granite":>9s} {"Llama":>9s} {"Mistral":>9s}')
     for t in tac_list:
         print(f'{t:28s} ' + ' '.join(f'{avg[s][t]:9.1%}' for s in SENS))
 
-    print("\nDettaglio per configurazione (block-rate, media sui target):")
+    print("\nDetails by configuration (block rate, average across targets):")
     for cfg in rate:
         print(f' Config {cfg}:')
         for t in tac_list:
@@ -114,7 +114,7 @@ def main():
     os.makedirs(OUTDIR, exist_ok=True)
     out = os.path.join(OUTDIR, "fig2_heatmap_tactic_sensor.pdf")
     fig.savefig(out, bbox_inches="tight"); plt.close(fig)
-    print("\nscritto", out)
+    print("\nwritten", out)
 
 
 if __name__ == "__main__":

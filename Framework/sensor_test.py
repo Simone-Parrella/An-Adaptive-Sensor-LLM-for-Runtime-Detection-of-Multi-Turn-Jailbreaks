@@ -118,7 +118,6 @@ def run_conversation_ensemble(
             recovery=riskC.THRESHOLD_RECOVERY,
         )
         if inherited_threshold_state:
-            # Copiamo lo stato per evitare dipendenze condivise
             dt.load_state(copy.deepcopy(inherited_threshold_state))
             
         sensors_state[name] = {

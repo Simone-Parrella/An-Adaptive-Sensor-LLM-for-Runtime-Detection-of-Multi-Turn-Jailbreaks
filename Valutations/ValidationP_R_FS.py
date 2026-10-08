@@ -91,7 +91,7 @@ def compute(folder, cls):
     grezzo = defaultdict(lambda: dict(TP=0, FP=0, FN=0, TN=0, EXCL=0))
     corr   = defaultdict(lambda: dict(TP=0, FP=0, FN=0, TN=0, EXCL=0))
 
-    # --- malevoli: identici nei due casi ---
+    # --- malicious: identical in both cases  ---
     for tgt, fn in MALICIOUS.items():
         for rec in load(os.path.join(BASE_DIR, folder, fn)):
             lab = chat_label(rec)
@@ -100,15 +100,15 @@ def compute(folder, cls):
                 update_malicious(grezzo, s, lab, b)
                 update_malicious(corr,   s, lab, b)
 
-    # --- sanificate ---
+    # --- sanitized ---
     for tgt, fn in SANITIZED.items():
         for rec in load(os.path.join(BASE_DIR, folder, fn)):
             harmful = (cls.get(rec["row_index"]) == HARMFUL_LABEL)
             for s in SENS:
                 b = sensor_blocked(rec, s)
-                # GREZZO: tutto benigno
+                # RAW: All benign
                 grezzo[s]["FP" if b else "TN"] += 1
-                # CORRETTO: DA_BLOCCARE = positivo
+                # CORRECT: DA_BLOCCARE = positive
                 if harmful:
                     corr[s]["TP" if b else "FN"] += 1
                 else:
@@ -148,10 +148,10 @@ def main():
         grez[cfg] = {s: prf(g[s]) for s in SENS}
         corr[cfg] = {s: prf(c[s]) for s in SENS}
 
-    print_table("GREZZO (dual tutto benigno) -> tab:prf", grez)
-    print_table("CORRETTO (DA_BLOCCARE = positivi) -> tab:prfcorr", corr)
-    print_latex("GREZZO  -> tab:prf", grez)
-    print_latex("CORRETTO -> tab:prfcorr", corr)
+    print_table("RAW (dual tutto benigno) -> tab:prf", grez)
+    print_table("CORRECT (DA_BLOCCARE = positivi) -> tab:prfcorr", corr)
+    print_latex("RAW  -> tab:prf", grez)
+    print_latex("CORRECT -> tab:prfcorr", corr)
 
 
 if __name__ == "__main__":
