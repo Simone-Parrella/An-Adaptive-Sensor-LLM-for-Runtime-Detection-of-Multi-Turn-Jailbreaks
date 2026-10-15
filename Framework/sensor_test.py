@@ -160,8 +160,8 @@ def run_conversation_ensemble(
 
     if verbose:
         print("\n" + "═" * 72)
-        cprint(f"  SESSIONE #{row_index}  target={target_model}", "cyan", bold=True)
-        cprint(f"  Sensori indipendenti: {' | '.join(sensor_names)}", "dim")
+        cprint(f"  SESSION #{row_index}  target={target_model}", "cyan", bold=True)
+        cprint(f"  Independent sensors: {' | '.join(sensor_names)}", "dim")
         print("═" * 72)
 
     for local_turn, user_msg in enumerate(user_messages, 1):
@@ -177,7 +177,7 @@ def run_conversation_ensemble(
 
         compressed = ctx_mgr.add_message("user", user_body, extra_system=system_prompt)
         if compressed and verbose:
-            cprint("  📦 COMPRESSIONE contesto!", "blue", bold=True)
+            cprint("  📦 Context COMPRESSION!", "blue", bold=True)
 
         sensor_history.append({"role": "user", "body": user_body})
 
@@ -209,7 +209,7 @@ def run_conversation_ensemble(
         elapsed_sensors = time.time() - t0
 
         if verbose:
-            print(f"\n  📊 VALUTAZIONE SENSORI ({elapsed_sensors:.1f}s):")
+            print(f"\n  📊 SENSOR EVALUATION ({elapsed_sensors:.1f}s):")
 
         turn_sensors_log = {}
         for name in sensor_names:
@@ -221,7 +221,7 @@ def run_conversation_ensemble(
                     "blocked_at": state["blocked_at_turn"]
                 }
                 if verbose:
-                    cprint(f"     {name:10s}: ⛔ [GIÀ BLOCCATO al turno {state['blocked_at_turn']}]", "dim")
+                    cprint(f"     {name:10s}: ⛔ [ALREADY BLOCKED at turn {state['blocked_at_turn']}]", "dim")
                 continue
 
             out = next(s for s in sensor_outputs if s["name"] == name)
@@ -246,7 +246,7 @@ def run_conversation_ensemble(
                 icon = vc_icon(verdict)
                 color = "red" if is_blocked else "white"
                 cprint(f"     {name:10s}: {icon} [{verdict:10s}]  Δ={delta:.2f}  {out['reason'][:50]}...", color)
-                cprint(f"                Rischio: {state['risk_engine'].risk_bar()}  Soglia: {state['dyn_thresh'].threshold_bar()}", "dim")
+                cprint(f"                Risk: {state['risk_engine'].risk_bar()}  Threshold: {state['dyn_thresh'].threshold_bar()}", "dim")
 
             if is_blocked:
                 state["blocked_at_turn"] = local_turn
@@ -259,7 +259,7 @@ def run_conversation_ensemble(
             "turn":         local_turn,
             "global_turn":  global_turn,
             "user":         user_body,
-            "response":     response if not all_blocked else "[BLOCCATO DEFINITIVAMENTE]",
+            "response":     response if not all_blocked else "[PERMANENTLY BLOCKED]",
             "sensors":      turn_sensors_log,
             "all_blocked":  all_blocked,
             "ctx_tokens_est": ctx_mgr._estimated_tokens(system_prompt),
@@ -270,7 +270,7 @@ def run_conversation_ensemble(
 
         if all_blocked:
             if verbose:
-                cprint("\n  ⛔ CHAT BLOCCATA — Tutti i sensori hanno superato le proprie soglie!", "red", bold=True)
+                cprint("\n  ⛔ CHAT BLOCKED — all sensors exceeded their thresholds!", "red", bold=True)
             
             final_states = {
                 n: {
@@ -289,7 +289,7 @@ def run_conversation_ensemble(
 
         compressed2 = ctx_mgr.add_message("assistant", response, extra_system=system_prompt)
         if compressed2 and verbose:
-            cprint("  📦 COMPRESSIONE contesto (post-risposta)!", "blue", bold=True)
+            cprint("  📦 Context COMPRESSION (after response)!", "blue", bold=True)
         sensor_history.append({"role": "assistant", "body": response})
 
     final_states = {}
@@ -309,7 +309,7 @@ def run_conversation_ensemble(
     })
 
     if verbose:
-        cprint("\n  ✅ Sessione completata (non tutti i sensori hanno bloccato).", "green", bold=True)
+        cprint("\n  ✅ Session completed (not all sensors blocked).", "green", bold=True)
 
     return result
 
@@ -325,7 +325,7 @@ def run_ensemble_mode(
     output_dir.mkdir(parents=True, exist_ok=True)
 
     cprint(f"\n{'═'*72}", "magenta")
-    cprint(f"  ENSEMBLE MODE — {len(target_models)} target  ×  {len(sensor_models)} sensori indipendenti",
+    cprint(f"  ENSEMBLE MODE — {len(target_models)} target  ×  {len(sensor_models)} independent sensors",
            "magenta", bold=True)
     cprint(f"{'═'*72}\n", "magenta")
 
@@ -362,47 +362,47 @@ def run_ensemble_mode(
                 if not verbose:
                     print(line)
 
-        cprint(f"  ✅ {out_path} scritto.", "green", bold=True)
+        cprint(f"  ✅ {out_path} written.", "green", bold=True)
 
     cprint(f"\n{'═'*72}", "green")
-    cprint(f"  ENSEMBLE completato — file in: {output_dir}", "green", bold=True)
+    cprint(f"  ENSEMBLE completed — files in: {output_dir}", "green", bold=True)
     cprint(f"{'═'*72}\n", "green")
 
 
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Ensemble sensor — 1 target risponde, N sensori valutano in parallelo finché TUTTI bloccano",
+        description="Ensemble sensor — 1 target answers, N sensors evaluate in parallel until ALL of them block",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
-Esempi:
-  Test locale con modelli piccoli (3 rows)
+Examples:
+  Local test with small models (3 rows)
   python sensor_test.py \\
       --dataset mhj_dataset.csv --rows 0-2 \\
       --target-models qwen2.5:1.5b,tinyllama:latest,phi3:mini \\
       --sensor-models qwen2.5:1.5b,tinyllama:latest,phi3:mini \\
-      --output-dir test_locale/ --quiet
+      --output-dir local_test/ --quiet
 """
     )
 
-    parser.add_argument("--dataset", "-d", required=True, help="Percorso CSV dataset")
-    parser.add_argument("--row",  type=int, default=None, help="Singola riga")
-    parser.add_argument("--rows", help="Es: 0,1,2 oppure 0-9")
-    parser.add_argument("--all",  action="store_true", help="Tutte le righe")
+    parser.add_argument("--dataset", "-d", required=True, help="Path to the CSV dataset")
+    parser.add_argument("--row",  type=int, default=None, help="Single row")
+    parser.add_argument("--rows", help="E.g. 0,1,2 or 0-9")
+    parser.add_argument("--all",  action="store_true", help="All rows")
     parser.add_argument("--target-models", required=True,
-                        help="Modelli target separati da virgola")
+                        help="Comma-separated target models")
     parser.add_argument("--sensor-models", required=True,
-                        help="Modelli sensore separati da virgola")
+                        help="Comma-separated sensor models")
     parser.add_argument("--sensor-weights", default=None,
-                        help="Pesi sensori (ora ininfluenti per il blocco indipendente, mantenuto retrocompatibile)")
+                        help="Sensor weights (no effect with independent blocking, kept for backward compatibility)")
     parser.add_argument("--target-names", default=None,
-                        help="Etichette per i target (default: g,l,m,...)")
+                        help="Labels for the targets (default: g,l,m,...)")
     parser.add_argument("--sensor-names", default=None,
-                        help="Etichette per i sensori (default: g,l,m,...)")
+                        help="Labels for the sensors (default: g,l,m,...)")
 
     parser.add_argument("--host", default=mr.DEFAULT_HOST)
-    parser.add_argument("--output-dir", "-o", default="risultati_ensemble/",
-                        help="Cartella output (default: risultati_ensemble/)")
+    parser.add_argument("--output-dir", "-o", default="ensemble_results/",
+                        help="Output folder (default: ensemble_results/)")
 
     parser.add_argument("--cooling",        type=float, default=riskC.DEFAULT_COOLING)
     parser.add_argument("--heat-scale",     type=float, default=riskC.DEFAULT_HEAT_SCALE)
@@ -432,9 +432,9 @@ Esempi:
         avail = [m["name"] for m in r.json().get("models", [])]
         if verbose:
             cprint(f"Ollama  : {args.host}", "cyan")
-            cprint(f"Modelli : {', '.join(avail)}", "dim")
+            cprint(f"Models  : {', '.join(avail)}", "dim")
     except Exception:
-        cprint(f"[ERRORE] Ollama non raggiungibile su {args.host}", "red")
+        cprint(f"[ERROR] Ollama not reachable at {args.host}", "red")
         sys.exit(1)
 
     target_models = [m.strip() for m in args.target_models.split(",") if m.strip()]
@@ -455,23 +455,23 @@ Esempi:
     if args.sensor_weights:
         sensor_weights = [float(w.strip()) for w in args.sensor_weights.split(",")]
         if len(sensor_weights) != len(sensor_models):
-            cprint("[ERRORE] Il numero di pesi deve corrispondere al numero di sensori", "red")
+            cprint("[ERROR] The number of weights must match the number of sensors", "red")
             sys.exit(1)
     else:
         sensor_weights = [1.0] * len(sensor_models)
 
     if verbose:
         cprint(f"Target  : {list(zip(target_names, target_models))}", "cyan")
-        cprint(f"Sensori : {list(zip(sensor_names, sensor_models))}", "cyan")
+        cprint(f"Sensors : {list(zip(sensor_names, sensor_models))}", "cyan")
         cprint(f"Config  : cooling={args.cooling}  heat_scale={args.heat_scale}  base_thr={args.base_threshold}", "dim")
     try:
         df = pd.read_csv(args.dataset)
     except FileNotFoundError:
-        cprint(f"[ERRORE] File non trovato: {args.dataset}", "red")
+        cprint(f"[ERROR] File not found: {args.dataset}", "red")
         sys.exit(1)
 
     if verbose:
-        cprint(f"Dataset : {args.dataset} ({len(df)} righe)", "cyan")
+        cprint(f"Dataset : {args.dataset} ({len(df)} rows)", "cyan")
 
     if args.all:
         row_indices = list(range(len(df)))
@@ -489,7 +489,7 @@ Esempi:
     else:
         row_indices = [0]
         if verbose:
-            cprint("Nessuna riga specificata, uso row 0", "yellow")
+            cprint("No row specified, using row 0", "yellow")
 
     sessions = []
     for row_idx in row_indices:
@@ -500,15 +500,15 @@ Esempi:
         meta = get_row_meta(row)
         if not user_msgs:
             if verbose:
-                cprint(f"[SKIP] Riga {row_idx}: nessun messaggio", "yellow")
+                cprint(f"[SKIP] Row {row_idx}: no messages", "yellow")
             continue
         sessions.append((row_idx, sys_prompt, user_msgs, meta))
 
     if not sessions:
-        cprint("[ERRORE] Nessuna sessione valida.", "red")
+        cprint("[ERROR] No valid session.", "red")
         sys.exit(1)
 
-    cprint(f"Sessioni: {len(sessions)}", "cyan")
+    cprint(f"Sessions: {len(sessions)}", "cyan")
 
     run_ensemble_mode(
         sessions=sessions,

@@ -35,7 +35,7 @@ def gather(tactics):
     for cfg, folder in CONFIGS.items():
         path = os.path.join(BASE_DIR, folder)
         if not os.path.isdir(path):
-            print(f"[config {cfg}] cartella '{folder}' assente, salto"); continue
+            print(f"[config {cfg}] folder '{folder}' missing, skipped"); continue
         per_target = {s: defaultdict(list) for s in SENS}
         for tgt, fn in MAL.items():
             fpath = os.path.join(path, fn)
@@ -83,7 +83,7 @@ def main():
     print("Conversation Count by Tactic (per dataset):")
     for t in tac_list:
         n = counts[t] // (n_cfg * 3)  
-        flag = "  <-- sample piccolo" if n < MIN_N else ""
+        flag = "  <-- small sample" if n < MIN_N else ""
         print(f"  {t:28s} {n}{flag}")
 
     print("\nBLOCK-RATE for (tactic, sensor), average across configurations and targets:")

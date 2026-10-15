@@ -28,7 +28,7 @@ def gather():
     for cfg, folder in CONFIGS.items():
         path = os.path.join(BASE_DIR, folder)
         if not os.path.isdir(path):
-            print(f"[config {cfg}] cartella '{folder}' assente, salto"); continue
+            print(f"[config {cfg}] folder '{folder}' missing, skipped"); continue
         block[cfg] = {s: {} for s in SENS}
         vdist[cfg] = {s: Counter() for s in SENS}
         for tgt, fn in MAL.items():
@@ -72,7 +72,7 @@ def fig1(block):
     ax.spines[["top", "right"]].set_visible(False); ax.grid(axis="y", alpha=0.3)
     fig.tight_layout(); os.makedirs(OUTDIR, exist_ok=True)
     out = os.path.join(OUTDIR, "fig1_sensor_vs_target.pdf")
-    fig.savefig(out, bbox_inches="tight"); plt.close(fig); print("scritto", out)
+    fig.savefig(out, bbox_inches="tight"); plt.close(fig); print("written", out)
 
 
 def fig3(vdist):
@@ -100,7 +100,7 @@ def fig3(vdist):
     ax.spines[["top", "right"]].set_visible(False)
     fig.tight_layout(); os.makedirs(OUTDIR, exist_ok=True)
     out = os.path.join(OUTDIR, "fig3_verdict_stability.pdf")
-    fig.savefig(out, bbox_inches="tight"); plt.close(fig); print("scritto", out)
+    fig.savefig(out, bbox_inches="tight"); plt.close(fig); print("written", out)
 
 
 def main():

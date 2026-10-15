@@ -75,7 +75,7 @@ def call_sensor(history, latest_response, model, host, max_retries=5):
                 return json.loads(json_str)
 
         except Exception:
-            print(f"[WARN] Tentativo {attempt}/{max_retries} - Sensore non JSON: {raw[:120]}")
+            print(f"[WARN] Attempt {attempt}/{max_retries} - Sensor output is not JSON: {raw[:120]}")
             time.sleep(0.5)
 
     return {"risk_delta": 1.0, "verdict": "SAFE", "reason": "Sensor output format invalid"}
@@ -98,24 +98,24 @@ def ollama_chat(messages: list, model: str, host: str,
         r.raise_for_status()
         return r.json()["message"]["content"]
     except requests.exceptions.ConnectionError:
-        print(f"\n[ERRORE] Ollama non raggiungibile su {host}", file=sys.stderr)
+        print(f"\n[ERROR] Ollama not reachable at {host}", file=sys.stderr)
         sys.exit(1)
     except Exception as e:
-        return f"[ERRORE OLLAMA: {e}]"
+        return f"[OLLAMA ERROR: {e}]"
 
 def estimate_tokens(text: str) -> int:
     return max(1, len(text) // CHARS_PER_TOKEN)
 
 class ContextManager:
     """
-    Classe che gestisce la finestra di contesto per simulare un sistema reale ma con un contesto limitato
-    Struttura interna:
-      summary_block = testo compresso delle conversazioni passate (None se vuoto)
-      recent = messaggi recenti [{role, content}, ...]
-    Trigger compressione: estimated_tokens > model_ctx * ctx_threshold * (1 - ctx_reserve)
-    Alla compressione: i messaggi più vecchi di recent vengono riassunti
-    e uniti al summary_block esistente. Vengono mantenuti gli ultimi
-    KEEP_AFTER_SUMMARY messaggi recenti intatti.
+    Manages the context window to simulate a real system with a limited context.
+    Internal structure:
+      summary_block = compressed text of past conversation (None if empty)
+      recent = recent messages [{role, content}, ...]
+    Compression trigger: estimated_tokens > model_ctx * ctx_threshold * (1 - ctx_reserve)
+    On compression: the oldest messages in recent are summarized and merged
+    into the existing summary_block. The last KEEP_AFTER_SUMMARY recent
+    messages are kept intact.
     """
 
     KEEP_AFTER_SUMMARY = 3
