@@ -9,12 +9,12 @@ HARMBENCH_URL = ("https://raw.githubusercontent.com/centerforaisafety/HarmBench/
 QID_OFFSET = 2 
 
 CATEGORY_NAMES = {
-    "misinformation_disinformation": "Misinformation & disinformation",
-    "illegal": "Illegal activities",
-    "harassment_bullying": "Harassment & bullying",
-    "harmful": "Harmful content",
-    "cybercrime_intrusion": "Cybercrime & intrusion",
-    "chemical_biological": "Chemical & biological",
+    "misinformation_disinformation": "Misinformation & Disinformation",
+    "illegal": "Illegal Activities",
+    "harassment_bullying": "Harassment & Bullying",
+    "harmful": "General Harm",
+    "cybercrime_intrusion": "Cybercrime & Unauthorized Intrusion",
+    "chemical_biological": "Chemical & Biological",
     "copyright": "Copyright",
 }
 
